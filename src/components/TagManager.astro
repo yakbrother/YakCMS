@@ -1,0 +1,109 @@
+---
+interface Props {
+  initialTags?: string[];
+}
+
+const { initialTags = [] } = Astro.props;
+---
+
+<div 
+  class="tag-manager"
+  x-data="{
+    tags: initialTags,
+    newTag: '',
+    suggestions: [],
+    showSuggestions: false,
+    
+    async searchTags(query) {
+      if (!query) {
+        this.suggestions = [];
+        return;
+      }
+      
+      const response = await fetch(`/api/tags/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      this.suggestions = data.tags.filter(tag => !this.tags.includes(tag));
+      this.showSuggestions = this.suggestions.length > 0;
+    },
+    
+    addTag(tag) {
+      if (tag && !this.tags.includes(tag)) {
+        this.tags.push(tag);
+        this.newTag = '';
+        this.suggestions = [];
+        this.updateHiddenInput();
+      }
+    },
+    
+    removeTag(index) {
+      this.tags.splice(index, 1);
+      this.updateHiddenInput();
+    },
+    
+    updateHiddenInput() {
+      document.getElementById('tags-input').value = JSON.stringify(this.tags);
+    }
+  }"
+>
+  <label class="block text-lg font-medium text-heading mb-2">Tags</label>
+  
+  <!-- Tags Display -->
+  <div class="flex flex-wrap gap-2 mb-3">
+    <template x-for="(tag, index) in tags" :key="index">
+      <span 
+        class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-secondary text-burgundy"
+      >
+        <span x-text="tag"></span>
+        <button 
+          @click="removeTag(index)" 
+          class="ml-2 text-burgundy hover:text-burgundy-dark"
+        >
+          ×
+        </button>
+      </span>
+    </template>
+  </div>
+
+  <!-- Tag Input -->
+  <div class="relative">
+    <input
+      type="text"
+      x-model="newTag"
+      @input="searchTags($event.target.value)"
+      @keydown.enter.prevent="addTag(newTag)"
+      @keydown.backspace="if (!newTag && tags.length) removeTag(tags.length - 1)"
+      @focus="if (newTag) searchTags(newTag)"
+      @blur="setTimeout(() => showSuggestions = false, 200)"
+      placeholder="Add a tag..."
+      class="w-full px-4 py-2 border-2 border-default rounded-lg bg-peach text-body focus:border-focus focus:ring-2 focus:ring-accent/20 transition-colors"
+    />
+
+    <!-- Suggestions Dropdown -->
+    <div
+      x-show="showSuggestions"
+      class="absolute z-10 w-full mt-1 bg-card rounded-lg shadow-lg border-2 border-default max-h-48 overflow-y-auto"
+    >
+      <template x-for="suggestion in suggestions" :key="suggestion">
+        <button
+          @click="addTag(suggestion)"
+          class="block w-full px-4 py-2 text-left hover:bg-peach text-body transition-colors"
+          x-text="suggestion"
+        ></button>
+      </template>
+    </div>
+  </div>
+
+  <!-- Hidden input for form submission -->
+  <input 
+    type="hidden" 
+    id="tags-input" 
+    name="tags" 
+    :value="JSON.stringify(tags)" 
+  />
+</div>
+
+<style>
+  .tag-manager {
+    @apply font-sans;
+  }
+</style>

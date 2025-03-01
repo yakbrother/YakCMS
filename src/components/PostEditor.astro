@@ -1,0 +1,218 @@
+---
+interface Props {
+  postId?: string;
+}
+
+const { postId } = Astro.props;
+---
+
+<div class="post-editor bg-base min-h-screen p-6">
+  <form id="postForm" class="space-y-6 bg-card rounded-lg shadow-lg p-8 max-w-4xl mx-auto border-2 border-default">
+    <input type="hidden" id="postId" value={postId} />
+    
+    <div>
+      <label for="title" class="block text-lg font-medium text-heading mb-2">Title</label>
+      <input
+        type="text"
+        id="title"
+        name="title"
+        class="w-full px-4 py-3 border-2 border-default rounded-lg bg-peach text-body focus:border-focus focus:ring-2 focus:ring-accent/20 transition-colors"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="content" class="block text-lg font-medium text-heading mb-2">Content</label>
+      <div id="editor"></div>
+      <input type="hidden" id="content" name="content" />
+    </div>
+
+    <div class="flex justify-end mt-4">
+      <button
+        type="submit"
+        class="px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent-dark transition-colors font-medium text-lg"
+      >
+        Save Post
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+  import { Editor } from '@tinymce/tinymce-react';
+  import { marked } from 'marked';
+
+  let editor;
+  
+  // Initialize TinyMCE
+  window.onload = async () => {
+    editor = await Editor.init({
+      target: document.getElementById('editor'),
+      plugins: 'markdown image code link lists table caption',
+      toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link image caption | code',
+      extended_valid_elements: 'figure[class],figcaption[class]',
+      image_caption: true,
+      image_advtab: true,
+      height: 500,
+      menubar: false,
+      markdown_enabled: true,
+      skin: 'oxide',
+      content_css: 'default',
+      content_style: `
+        body {
+          font-family: system-ui, sans-serif;
+          background-color: #FFE6D8;
+          color: #515A47;
+          padding: 1rem;
+        }
+        h1, h2, h3, h4, h5, h6 {
+          color: #400406;
+          font-weight: 600;
+        }
+        a {
+          color: #FF451C;
+        }
+        code {
+          background-color: #d7be82;
+          padding: 0.2em 0.4em;
+          border-radius: 0.25em;
+        }
+      `,
+      style_formats: [
+        {
+          title: 'Headings',
+          items: [
+            { title: 'Heading 1', format: 'h1' },
+            { title: 'Heading 2', format: 'h2' },
+            { title: 'Heading 3', format: 'h3' }
+          ]
+        },
+        {
+          title: 'Inline',
+          items: [
+            { title: 'Bold', format: 'bold' },
+            { title: 'Italic', format: 'italic' },
+            { title: 'Code', format: 'code' }
+          ]
+        }
+      ],
+      images_upload_handler: async (blobInfo, progress) => {
+        try {
+          const formData = new FormData();
+          formData.append('image', blobInfo.blob(), blobInfo.filename());
+
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            // Create a responsive image with srcset
+            const srcset = data.sizes
+              .map(size => `${size.url} ${size.width}w`)
+              .join(', ');
+            
+            // Return an object with image details
+            return {
+              url: data.url,
+              srcset: srcset,
+              sizes: '(max-width: 400px) 400px, (max-width: 800px) 800px, 1200px'
+            };
+          }
+          throw new Error('Upload failed');
+        } catch (error) {
+          console.error('Image upload failed:', error);
+          throw error;
+        }
+      },
+      setup: (editor) => {
+        editor.on('change', () => {
+          // Convert HTML to Markdown when content changes
+          const html = editor.getContent();
+          const markdown = convertToMarkdown(html);
+          document.getElementById('content').value = markdown;
+        });
+      }
+    });
+  };
+
+  function convertToMarkdown(html) {
+    // Custom function to convert HTML to Markdown
+    // You might want to use a more sophisticated conversion library
+    return html
+      .replace(/<h([1-6])>(.+?)<\/h\1>/g, (_, level, content) => `${'#'.repeat(level)} ${content}\n\n`)
+      .replace(/<p>(.+?)<\/p>/g, '$1\n\n')
+      .replace(/<strong>(.+?)<\/strong>/g, '**$1**')
+      .replace(/<em>(.+?)<\/em>/g, '*$1*')
+      .replace(/<a href="(.+?)">(.+?)<\/a>/g, '[$2]($1)')
+      .replace(/<figure[^>]*>\s*<img[^>]*src="([^"]+)"[^>]*>\s*<figcaption>([^<]+)<\/figcaption>\s*<\/figure>/g, '![{caption="$2"}]($1)')
+      .replace(/<img.*?src="([^"]+)".*?>/g, (match, src) => {
+        // Extract srcset if present
+        const srcsetMatch = match.match(/srcset="([^"]+)"/)
+        return srcsetMatch ? 
+          `![{srcset="${srcsetMatch[1]}"}](${src})` : 
+          `![](${src})`
+      })
+      .replace(/<ul>|<\/ul>|<ol>|<\/ol>/g, '\n')
+      .replace(/<li>(.+?)<\/li>/g, '- $1\n');
+  }
+
+  // Form submission
+  document.getElementById('postForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+      id: document.getElementById('postId').value,
+      title: document.getElementById('title').value,
+      content: document.getElementById('content').value,
+    };
+
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        window.location.href = '/admin/posts';
+      }
+    } catch (error) {
+      console.error('Failed to save post:', error);
+    }
+  });
+
+  // Load existing post data if editing
+  async function loadPost() {
+    const postId = document.getElementById('postId').value;
+    if (!postId) return;
+
+    try {
+      const response = await fetch(`/api/posts/${postId}`);
+      const post = await response.json();
+
+      document.getElementById('title').value = post.title;
+      
+      // Convert Markdown to HTML for TinyMCE
+      const html = marked(post.content);
+      editor.setContent(html);
+    } catch (error) {
+      console.error('Failed to load post:', error);
+    }
+  }
+
+  if (document.getElementById('postId').value) {
+    loadPost();
+  }
+</script>
+
+<style>
+  .post-editor {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+</style>

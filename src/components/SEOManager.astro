@@ -1,0 +1,150 @@
+---
+interface Props {
+  initialData?: {
+    title?: string;
+    description?: string;
+    keywords?: string[];
+    ogImage?: string;
+    canonical?: string;
+  };
+}
+
+const { initialData = {} } = Astro.props;
+---
+
+<div 
+  class="seo-manager bg-card rounded-lg border-2 border-default p-6"
+  x-data="{
+    title: initialData.title || '',
+    description: initialData.description || '',
+    keywords: initialData.keywords || [],
+    ogImage: initialData.ogImage || '',
+    canonical: initialData.canonical || '',
+    
+    characterCount: 0,
+    keywordInput: '',
+    
+    updateCharacterCount() {
+      this.characterCount = this.description.length;
+    }
+  }"
+>
+  <h3 class="text-xl font-semibold text-heading mb-6">SEO Settings</h3>
+
+  <!-- Title -->
+  <div class="mb-6">
+    <label class="block text-body font-medium mb-2">Meta Title</label>
+    <input
+      type="text"
+      x-model="title"
+      class="w-full px-4 py-2 border-2 border-default rounded-lg bg-peach text-body focus:border-focus focus:ring-2 focus:ring-accent/20 transition-colors"
+      placeholder="Enter meta title"
+      maxlength="60"
+    />
+    <div class="mt-1 text-sm text-body-light flex justify-between">
+      <span>Recommended length: 50-60 characters</span>
+      <span x-text="title.length + '/60'"></span>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="mb-6">
+    <label class="block text-body font-medium mb-2">Meta Description</label>
+    <textarea
+      x-model="description"
+      @input="updateCharacterCount"
+      class="w-full px-4 py-2 border-2 border-default rounded-lg bg-peach text-body focus:border-focus focus:ring-2 focus:ring-accent/20 transition-colors"
+      rows="3"
+      placeholder="Enter meta description"
+      maxlength="160"
+    ></textarea>
+    <div class="mt-1 text-sm text-body-light flex justify-between">
+      <span>Recommended length: 150-160 characters</span>
+      <span x-text="characterCount + '/160'"></span>
+    </div>
+  </div>
+
+  <!-- Keywords -->
+  <div class="mb-6">
+    <label class="block text-body font-medium mb-2">Keywords</label>
+    <div class="flex flex-wrap gap-2 mb-2">
+      <template x-for="(keyword, index) in keywords" :key="index">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-secondary text-burgundy">
+          <span x-text="keyword"></span>
+          <button 
+            @click="keywords.splice(index, 1)"
+            class="ml-2 text-burgundy hover:text-burgundy-dark"
+          >×</button>
+        </span>
+      </template>
+    </div>
+    <div class="flex gap-2">
+      <input
+        type="text"
+        x-model="keywordInput"
+        @keydown.enter.prevent="if(keywordInput) { keywords.push(keywordInput); keywordInput = ''; }"
+        class="flex-1 px-4 py-2 border-2 border-default rounded-lg bg-peach text-body focus:border-focus focus:ring-2 focus:ring-accent/20 transition-colors"
+        placeholder="Add a keyword"
+      />
+      <button
+        @click="if(keywordInput) { keywords.push(keywordInput); keywordInput = ''; }"
+        class="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark transition-colors"
+      >
+        Add
+      </button>
+    </div>
+  </div>
+
+  <!-- OG Image -->
+  <div class="mb-6">
+    <label class="block text-body font-medium mb-2">Social Share Image</label>
+    <div class="flex gap-2">
+      <input
+        type="text"
+        x-model="ogImage"
+        class="flex-1 px-4 py-2 border-2 border-default rounded-lg bg-peach text-body focus:border-focus focus:ring-2 focus:ring-accent/20 transition-colors"
+        placeholder="Image URL"
+      />
+      <button
+        @click="$dispatch('open-media-library')"
+        class="px-4 py-2 bg-secondary text-burgundy rounded-lg hover:bg-secondary-dark transition-colors"
+      >
+        Browse
+      </button>
+    </div>
+  </div>
+
+  <!-- Canonical URL -->
+  <div class="mb-6">
+    <label class="block text-body font-medium mb-2">Canonical URL</label>
+    <input
+      type="url"
+      x-model="canonical"
+      class="w-full px-4 py-2 border-2 border-default rounded-lg bg-peach text-body focus:border-focus focus:ring-2 focus:ring-accent/20 transition-colors"
+      placeholder="https://example.com/page"
+    />
+  </div>
+
+  <!-- Preview -->
+  <div class="mt-8 p-4 bg-peach rounded-lg border-2 border-default">
+    <h4 class="text-lg font-semibold text-heading mb-4">Search Preview</h4>
+    <div class="font-mono text-sm">
+      <div class="text-accent" x-text="title || 'Title'"></div>
+      <div class="text-primary-light text-xs" x-text="canonical || 'URL'"></div>
+      <div class="text-body mt-1" x-text="description || 'Description'"></div>
+    </div>
+  </div>
+
+  <!-- Hidden inputs for form submission -->
+  <input type="hidden" name="seo[title]" :value="title">
+  <input type="hidden" name="seo[description]" :value="description">
+  <input type="hidden" name="seo[keywords]" :value="JSON.stringify(keywords)">
+  <input type="hidden" name="seo[ogImage]" :value="ogImage">
+  <input type="hidden" name="seo[canonical]" :value="canonical">
+</div>
+
+<style>
+  .seo-manager {
+    @apply font-sans;
+  }
+</style>
