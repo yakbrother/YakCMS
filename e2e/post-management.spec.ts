@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
+import type { Page } from '@playwright/test';
+
+async function createTestPost(page: Page, title: string) {
+  await page.click('text=New Post');
+  await page.fill('input[name="title"]', title);
+  const frame = page.frameLocator('.tox-edit-area__iframe');
+  await frame.locator('body').fill('Test content for ' + title);
+  await page.click('text=Save Post');
+}
 
 test.describe('Post Management', () => {
   test.beforeEach(async ({ page }) => {
@@ -77,6 +86,165 @@ test.describe('Post Management', () => {
   });
 
   test('should validate scheduling rules', async ({ page }) => {
+    await page.click('text=New Post');
+    await page.fill('input[name="title"]', 'Invalid Schedule Test');
+    
+    // Set to scheduled
+    await page.check('input[value="scheduled"]');
+    
+    // Set past date
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    await page.fill('input[type="date"]', format(yesterday, 'yyyy-MM-dd'));
+    await page.fill('input[type="time"]', '12:00');
+    
+    // Try to save
+    await page.click('text=Save Post');
+    
+    // Verify error message
+    await expect(page.locator('text=Please select a future date and time')).toBeVisible();
+    
+    // Verify we're still on the editor page
+    await expect(page).toHaveURL('/admin/editor');
+  });
+
+  test('should support post editing workflow', async ({ page }) => {
+    // Create initial post
+    await createTestPost(page, 'Edit Workflow Test');
+    
+    // Find and edit the post
+    await page.click('text=Edit Workflow Test');
+    await page.fill('input[name="title"]', 'Updated Title');
+    await page.click('text=Save Post');
+
+    // Verify changes
+    await expect(page.locator('text=Updated Title')).toBeVisible();
+    await expect(page.locator('text=Edit Workflow Test')).not.toBeVisible();
+  });
+
+  test('should handle draft to published transitions', async ({ page }) => {
+    await createTestPost(page, 'Draft Post');
+    
+    // Find the draft post and publish it
+    await page.click('text=Draft Post');
+    await page.click('text=Publish');
+    await page.click('text=Confirm Publish');
+
+    // Verify status change
+    await expect(page.locator('text=Published')).toBeVisible();
+    
+    // Verify it appears in published posts list
+    await page.click('text=Published Posts');
+    await expect(page.locator('text=Draft Post')).toBeVisible();
+  });
+
+  test('should support post categorization and tagging', async ({ page }) => {
+    await page.click('text=New Post');
+    await page.fill('input[name="title"]', 'Categorized Post');
+    
+    // Add category
+    await page.click('text=Select Category');
+    await page.click('text=Technology');
+    
+    // Add tags
+    await page.fill('input[name="tags"]', 'test-tag');
+    await page.keyboard.press('Enter');
+    await page.fill('input[name="tags"]', 'another-tag');
+    await page.keyboard.press('Enter');
+    
+    await page.click('text=Save Post');
+
+    // Verify post appears in category view
+    await page.click('text=Categories');
+    await page.click('text=Technology');
+    await expect(page.locator('text=Categorized Post')).toBeVisible();
+  });
+
+  test('should support bulk operations', async ({ page }) => {
+    // Create multiple test posts
+    await createTestPost(page, 'Bulk Post 1');
+    await createTestPost(page, 'Bulk Post 2');
+    await createTestPost(page, 'Bulk Post 3');
+
+    // Select multiple posts
+    await page.click('checkbox[aria-label="Select Bulk Post 1"]');
+    await page.click('checkbox[aria-label="Select Bulk Post 2"]');
+    
+    // Perform bulk publish
+    await page.click('text=Bulk Actions');
+    await page.click('text=Publish Selected');
+    await page.click('text=Confirm');
+
+    // Verify status changes
+    await expect(page.locator('text=2 posts published')).toBeVisible();
+  });
+
+  test('should support post search functionality', async ({ page }) => {
+    // Create posts with distinct content
+    await createTestPost(page, 'Unique Title One');
+    await createTestPost(page, 'Unique Title Two');
+
+    // Test search
+    await page.fill('input[placeholder="Search posts..."]', 'Unique Title One');
+    await page.keyboard.press('Enter');
+
+    // Verify search results
+    await expect(page.locator('text=Unique Title One')).toBeVisible();
+    await expect(page.locator('text=Unique Title Two')).not.toBeVisible();
+
+    // Test advanced search filters
+    await page.click('text=Advanced Search');
+    await page.selectOption('select[name="status"]', 'draft');
+    await page.fill('input[name="dateFrom"]', format(new Date(), 'yyyy-MM-dd'));
+    await page.click('text=Search');
+
+    // Verify filtered results
+    await expect(page.locator('.search-results')).toContainText('Showing draft posts from');
+  });
+
+  test('should handle SEO metadata', async ({ page }) => {
+    await page.click('text=New Post');
+    await page.fill('input[name="title"]', 'SEO Test Post');
+
+    // Open SEO section
+    await page.click('text=SEO Settings');
+
+    // Fill SEO metadata
+    await page.fill('input[name="meta-title"]', 'Custom Meta Title');
+    await page.fill('textarea[name="meta-description"]', 'Custom meta description for search results');
+    await page.fill('input[name="meta-keywords"]', 'test, seo, keywords');
+
+    await page.click('text=Save Post');
+
+    // View post and verify meta tags
+    await page.click('text=View Post');
+    await expect(page).toHaveTitle('Custom Meta Title');
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', 'Custom meta description for search results');
+    await expect(page.locator('meta[name="keywords"]')).toHaveAttribute('content', 'test, seo, keywords');
+  });
+
+  test('should handle post preview functionality', async ({ page }) => {
+    await page.click('text=New Post');
+    await page.fill('input[name="title"]', 'Preview Test Post');
+    
+    const frame = page.frameLocator('.tox-edit-area__iframe');
+    await frame.locator('body').fill('This is a test of the preview functionality');
+
+    // Open preview
+    await page.click('text=Preview');
+
+    // Switch to preview tab/window
+    const previewPage = await page.waitForEvent('popup');
+    await expect(previewPage.locator('h1')).toHaveText('Preview Test Post');
+    await expect(previewPage.locator('article')).toContainText('This is a test of the preview functionality');
+
+    // Verify preview shows unpublished changes
+    await page.bringToFront();
+    await page.fill('input[name="title"]', 'Updated Preview Title');
+    await previewPage.reload();
+    await expect(previewPage.locator('h1')).toHaveText('Updated Preview Title');
+  });
     await page.click('text=New Post');
     await page.fill('input[name="title"]', 'Invalid Schedule Test');
     
