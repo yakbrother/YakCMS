@@ -1,0 +1,201 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { auditLogger } from '../../../lib/audit';
+
+// Fetch audit logs with pagination
+const page = +(Astro.url.searchParams.get('page') || '1');
+const logs = await auditLogger.query({
+    limit: 50,
+    offset: (page - 1) * 50
+});
+---
+
+<AdminLayout title="Audit Log">
+    <div class="audit-header">
+        <h1>Audit Log</h1>
+        <div class="audit-filters">
+            <select id="resourceType" class="filter-select">
+                <option value="">All Types</option>
+                <option value="post">Posts</option>
+                <option value="media">Media</option>
+                <option value="settings">Settings</option>
+                <option value="backup">Backups</option>
+            </select>
+            <input 
+                type="date" 
+                id="startDate" 
+                class="filter-date"
+                placeholder="Start Date"
+            />
+            <input 
+                type="date" 
+                id="endDate" 
+                class="filter-date"
+                placeholder="End Date"
+            />
+            <button id="applyFilters" class="button">Apply Filters</button>
+        </div>
+    </div>
+
+    <div class="audit-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Resource Type</th>
+                    <th>Resource ID</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {logs.map(log => (
+                    <tr>
+                        <td>{new Date(log.timestamp).toLocaleString()}</td>
+                        <td>{log.userId}</td>
+                        <td>{log.action}</td>
+                        <td>{log.resourceType}</td>
+                        <td>{log.resourceId || '-'}</td>
+                        <td>
+                            <button 
+                                class="view-details"
+                                data-details={JSON.stringify(log.details)}
+                            >
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </div>
+</AdminLayout>
+
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Log Details</h2>
+        <pre id="detailsContent"></pre>
+    </div>
+</div>
+
+<style>
+    .audit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .audit-filters {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-select,
+    .filter-date {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .audit-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    th {
+        background: #f8f9fa;
+        font-weight: 600;
+    }
+
+    .view-details {
+        background: none;
+        border: none;
+        color: #0066cc;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: white;
+        margin: 15% auto;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 600px;
+        position: relative;
+    }
+
+    .close {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        overflow: auto;
+    }
+</style>
+
+<script>
+    // Handle view details buttons
+    document.querySelectorAll('.view-details').forEach(button => {
+        button.addEventListener('click', () => {
+            const details = JSON.parse(button.dataset.details);
+            const modal = document.getElementById('detailsModal');
+            const content = document.getElementById('detailsContent');
+            content.textContent = JSON.stringify(details, null, 2);
+            modal.style.display = 'block';
+        });
+    });
+
+    // Close modal
+    document.querySelector('.close').addEventListener('click', () => {
+        document.getElementById('detailsModal').style.display = 'none';
+    });
+
+    // Handle filter form
+    document.getElementById('applyFilters').addEventListener('click', () => {
+        const resourceType = document.getElementById('resourceType').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        const params = new URLSearchParams(window.location.search);
+        if (resourceType) params.set('type', resourceType);
+        if (startDate) params.set('start', startDate);
+        if (endDate) params.set('end', endDate);
+
+        window.location.search = params.toString();
+    });
+</script>

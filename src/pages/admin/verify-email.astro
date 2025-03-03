@@ -1,0 +1,237 @@
+---
+const token = Astro.url.searchParams.get('token');
+const error = Astro.url.searchParams.get('error');
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - YakCMS Admin</title>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-box">
+            <h1>Email Verification</h1>
+
+            {error && (
+                <div class="error-message">
+                    {error === 'expired' 
+                        ? 'Verification link has expired. Please request a new one.'
+                        : error === 'invalid'
+                        ? 'Invalid verification link.'
+                        : 'An error occurred. Please try again.'}
+                </div>
+            )}
+
+            {!token ? (
+                <form id="requestVerificationForm" class="verify-form">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required 
+                            autocomplete="email"
+                        />
+                    </div>
+
+                    <button type="submit" class="verify-button">
+                        Send Verification Link
+                    </button>
+
+                    <div id="successMessage" class="success-message" style="display: none;">
+                        Check your email for the verification link.
+                    </div>
+                </form>
+            ) : (
+                <div id="verificationStatus" class="verification-status">
+                    <div class="loading-spinner"></div>
+                    <p>Verifying your email...</p>
+                </div>
+            )}
+
+            <div class="back-link">
+                <a href="/admin/login">Back to Login</a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verify-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 1rem;
+        }
+
+        .verify-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 2rem;
+            color: #333;
+        }
+
+        .verify-form {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 2px rgba(0,102,204,0.1);
+        }
+
+        .verify-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .verify-button:hover {
+            background: #0052a3;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c00;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .success-message {
+            background: #e6f4ea;
+            color: #1e7e34;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .verification-status {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0066cc;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .back-link a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+    <script>
+        const requestVerificationForm = document.getElementById('requestVerificationForm');
+        const token = new URLSearchParams(window.location.search).get('token');
+
+        if (requestVerificationForm) {
+            requestVerificationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+
+                try {
+                    const response = await fetch('/api/auth/verify-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email }),
+                    });
+
+                    if (!response.ok) throw new Error('Failed to send verification email');
+
+                    document.getElementById('successMessage').style.display = 'block';
+                    requestVerificationForm.reset();
+                } catch (error) {
+                    console.error('Verification request failed:', error);
+                    alert('Failed to send verification email. Please try again.');
+                }
+            });
+        }
+
+        if (token) {
+            (async () => {
+                try {
+                    const response = await fetch('/api/auth/verify-email', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token }),
+                    });
+
+                    if (!response.ok) throw new Error('Failed to verify email');
+
+                    window.location.href = '/admin/login?message=email-verified';
+                } catch (error) {
+                    console.error('Email verification failed:', error);
+                    window.location.href = '/admin/verify-email?error=invalid';
+                }
+            })();
+        }
+    </script>
+</body>
+</html>

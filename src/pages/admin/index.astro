@@ -1,0 +1,57 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Dashboard">
+	<h1>YakCMS Admin Dashboard</h1>
+	<div class="dashboard-grid">
+		<div class="dashboard-card">
+			<h2>Quick Actions</h2>
+			<ul>
+				<li><a href="/admin/posts/new">Create New Post</a></li>
+				<li><a href="/admin/media/upload">Upload Media</a></li>
+			</ul>
+		</div>
+	</div>
+</AdminLayout>
+
+<style>
+	.dashboard-grid {
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	}
+
+	.dashboard-card {
+		background: white;
+		padding: 1.5rem;
+		border-radius: 8px;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+
+	h1 {
+		margin-bottom: 2rem;
+	}
+
+	h2 {
+		margin-bottom: 1rem;
+	}
+
+	ul {
+		list-style: none;
+		padding: 0;
+	}
+
+	li {
+		margin: 0.5rem 0;
+	}
+
+	a {
+		color: #0066cc;
+		text-decoration: none;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+</style>

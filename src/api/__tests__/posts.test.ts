@@ -34,8 +34,8 @@ describe('Posts API', () => {
 
     it('should filter posts by status', async () => {
       const mockPosts = [
-        { id: '1', title: 'Post 1', status: 'published' },
-        { id: '2', title: 'Post 2', status: 'draft' }
+        { id: '1', title: 'Post 1', data: { status: 'published' }, body: '' },
+        { id: '2', title: 'Post 2', data: { status: 'draft' }, body: '' }
       ];
 
       vi.mocked(getCollection).mockResolvedValueOnce(mockPosts);
@@ -44,13 +44,13 @@ describe('Posts API', () => {
       const data = await response.json();
 
       expect(data).toHaveLength(1);
-      expect(data[0].status).toBe('published');
+      expect(data[0].data.status).toBe('published');
     });
 
     it('should handle search queries', async () => {
       const mockPosts = [
-        { id: '1', title: 'Test Post', content: 'abc' },
-        { id: '2', title: 'Another Post', content: 'xyz' }
+        { id: '1', data: { title: 'Test Post' }, body: 'abc' },
+        { id: '2', data: { title: 'Another Post' }, body: 'xyz' }
       ];
 
       vi.mocked(getCollection).mockResolvedValueOnce(mockPosts);
@@ -59,12 +59,13 @@ describe('Posts API', () => {
       const data = await response.json();
 
       expect(data).toHaveLength(1);
-      expect(data[0].title).toContain('Test');
+      expect(data[0].data.title).toContain('Test');
     });
+
     it('should return all posts when no id is provided', async () => {
       const mockPosts = [
-        { id: '1', title: 'Test Post 1' },
-        { id: '2', title: 'Test Post 2' }
+        { id: '1', data: { title: 'Test Post 1' }, body: '' },
+        { id: '2', data: { title: 'Test Post 2' }, body: '' }
       ];
 
       vi.mocked(getCollection).mockResolvedValueOnce(mockPosts);
@@ -77,7 +78,7 @@ describe('Posts API', () => {
     });
 
     it('should return a single post when id is provided', async () => {
-      const mockPost = { id: '1', title: 'Test Post 1' };
+      const mockPost = { id: '1', data: { title: 'Test Post 1' }, body: '' };
       vi.mocked(getEntry).mockResolvedValueOnce(mockPost);
 
       const response = await get({ params: { id: '1' } } as any);
@@ -242,6 +243,8 @@ describe('Posts API', () => {
       const tooManyRequests = responses.some(r => r.status === 429);
       expect(tooManyRequests).toBe(true);
     });
+  });
+});
       const mockPost = {
         content: 'Test content'
         // Missing title

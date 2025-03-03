@@ -57,7 +57,7 @@ test.describe('Post Management', () => {
     
     // Verify post appears in scheduled posts section
     await expect(page.locator('text=Scheduled Post')).toBeVisible();
-    await expect(page.locator(\`text=\${format(tomorrow, 'PPP')}\`)).toBeVisible();
+    await expect(page.locator(`text=${format(tomorrow, 'PPP')}`)).toBeVisible();
   });
 
   test('should handle image uploads in post content', async ({ page }) => {

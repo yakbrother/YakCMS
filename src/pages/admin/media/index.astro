@@ -1,0 +1,144 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// This would come from your media storage
+const mediaFiles = [];
+---
+
+<AdminLayout title="Media Library">
+	<div class="media-header">
+		<h1>Media Library</h1>
+		<a href="/admin/media/upload" class="button">Upload Media</a>
+	</div>
+
+	<div class="media-grid">
+		{mediaFiles.length > 0 ? (
+			mediaFiles.map((file) => (
+				<div class="media-card">
+					<div class="media-preview">
+						{file.type.startsWith('image/') ? (
+							<img src={file.url} alt={file.name} />
+						) : (
+							<div class="file-icon">{file.extension}</div>
+						)}
+					</div>
+					<div class="media-info">
+						<p class="media-name">{file.name}</p>
+						<p class="media-meta">{file.size}</p>
+					</div>
+					<div class="media-actions">
+						<button class="copy-url">Copy URL</button>
+						<button class="delete">Delete</button>
+					</div>
+				</div>
+			))
+		) : (
+			<div class="empty-state">
+				<p>No media files yet. Upload your first file!</p>
+				<a href="/admin/media/upload" class="button">Upload Media</a>
+			</div>
+		)}
+	</div>
+</AdminLayout>
+
+<style>
+	.media-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 2rem;
+	}
+
+	.button {
+		background: #0066cc;
+		color: white;
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		text-decoration: none;
+	}
+
+	.media-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.media-card {
+		background: white;
+		border-radius: 8px;
+		overflow: hidden;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+
+	.media-preview {
+		aspect-ratio: 16/9;
+		background: #f4f4f4;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.media-preview img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.file-icon {
+		font-size: 2rem;
+		color: #666;
+		text-transform: uppercase;
+	}
+
+	.media-info {
+		padding: 1rem;
+	}
+
+	.media-name {
+		margin: 0;
+		font-size: 0.9rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.media-meta {
+		margin: 0.25rem 0 0;
+		font-size: 0.8rem;
+		color: #666;
+	}
+
+	.media-actions {
+		padding: 0.5rem 1rem;
+		border-top: 1px solid #eee;
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.media-actions button {
+		flex: 1;
+		padding: 0.25rem;
+		border: none;
+		border-radius: 4px;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+
+	.copy-url {
+		background: #f4f4f4;
+	}
+
+	.delete {
+		background: #fee;
+		color: #c00;
+	}
+
+	.empty-state {
+		grid-column: 1 / -1;
+		text-align: center;
+		padding: 3rem;
+		background: white;
+		border-radius: 8px;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+</style>

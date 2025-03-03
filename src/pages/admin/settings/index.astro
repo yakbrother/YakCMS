@@ -1,0 +1,154 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Settings">
+	<h1>Site Settings</h1>
+
+	<div class="settings-grid">
+		<div class="settings-card">
+			<h2>General Settings</h2>
+			<form class="settings-form">
+				<div class="form-group">
+					<label for="siteName">Site Name</label>
+					<input type="text" id="siteName" name="siteName" required>
+				</div>
+
+				<div class="form-group">
+					<label for="siteDescription">Site Description</label>
+					<textarea id="siteDescription" name="siteDescription" rows="3"></textarea>
+				</div>
+
+				<div class="form-group">
+					<label for="postsPerPage">Posts Per Page</label>
+					<input type="number" id="postsPerPage" name="postsPerPage" min="1" max="50" value="10">
+				</div>
+
+				<button type="submit" class="button primary">Save General Settings</button>
+			</form>
+		</div>
+
+		<div class="settings-card">
+			<h2>User Management</h2>
+			<div class="user-list">
+				<div class="user-item">
+					<div class="user-info">
+						<strong>Admin User</strong>
+						<span class="user-email">admin@example.com</span>
+					</div>
+					<div class="user-role">Administrator</div>
+					<button class="button small">Edit</button>
+				</div>
+			</div>
+			<button class="button" style="margin-top: 1rem;">Add New User</button>
+		</div>
+
+		<div class="settings-card">
+			<h2>Theme Settings</h2>
+			<form class="settings-form">
+				<div class="form-group">
+					<label for="primaryColor">Primary Color</label>
+					<input type="color" id="primaryColor" name="primaryColor">
+				</div>
+
+				<div class="form-group">
+					<label for="fontFamily">Font Family</label>
+					<select id="fontFamily" name="fontFamily">
+						<option value="system">System Default</option>
+						<option value="serif">Serif</option>
+						<option value="sans">Sans-serif</option>
+					</select>
+				</div>
+
+				<button type="submit" class="button primary">Save Theme Settings</button>
+			</form>
+		</div>
+	</div>
+</AdminLayout>
+
+<style>
+	.settings-grid {
+		display: grid;
+		gap: 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	}
+
+	.settings-card {
+		background: white;
+		padding: 1.5rem;
+		border-radius: 8px;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+
+	.settings-form {
+		margin-top: 1rem;
+	}
+
+	.form-group {
+		margin-bottom: 1rem;
+	}
+
+	label {
+		display: block;
+		margin-bottom: 0.5rem;
+		font-weight: 500;
+	}
+
+	input, textarea, select {
+		width: 100%;
+		padding: 0.5rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		font-size: 1rem;
+	}
+
+	.button {
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		border: none;
+		font-size: 1rem;
+		cursor: pointer;
+		background: #f4f4f4;
+		color: #333;
+		text-decoration: none;
+	}
+
+	.button.primary {
+		background: #0066cc;
+		color: white;
+	}
+
+	.button.small {
+		padding: 0.25rem 0.5rem;
+		font-size: 0.9rem;
+	}
+
+	.user-list {
+		margin-top: 1rem;
+	}
+
+	.user-item {
+		display: flex;
+		align-items: center;
+		padding: 0.75rem;
+		background: #f8f9fa;
+		border-radius: 4px;
+		margin-bottom: 0.5rem;
+	}
+
+	.user-info {
+		flex: 1;
+	}
+
+	.user-email {
+		display: block;
+		font-size: 0.9rem;
+		color: #666;
+	}
+
+	.user-role {
+		margin: 0 1rem;
+		font-size: 0.9rem;
+		color: #0066cc;
+	}
+</style>

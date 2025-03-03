@@ -1,0 +1,342 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { backupManager } from '../../../lib/backup';
+
+const backups = await backupManager.listBackups();
+---
+
+<AdminLayout title="Backups">
+    <div class="backup-header">
+        <h1>Backups</h1>
+        <div class="backup-actions">
+            <button id="createBackup" class="button primary">Create New Backup</button>
+        </div>
+    </div>
+
+    <div class="backup-options" id="backupOptions" style="display: none;">
+        <h2>Create Backup</h2>
+        <form id="backupForm" class="backup-form">
+            <div class="form-group">
+                <label for="backupType">Backup Type</label>
+                <select id="backupType" name="type" required>
+                    <option value="full">Full Backup</option>
+                    <option value="content">Content Only</option>
+                    <option value="media">Media Only</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="button primary">Start Backup</button>
+                <button type="button" class="button" id="cancelBackup">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="backup-list">
+        {backups.map(backup => (
+            <div class="backup-item">
+                <div class="backup-info">
+                    <h3>Backup {backup.type}</h3>
+                    <p class="backup-meta">
+                        Created on {new Date(backup.timestamp).toLocaleString()}
+                        by {backup.createdBy}
+                    </p>
+                    <p class="backup-size">
+                        Size: {formatSize(backup.size)}
+                    </p>
+                </div>
+                <div class="backup-status" data-status={backup.status}>
+                    {backup.status}
+                </div>
+                <div class="backup-actions">
+                    {backup.status === 'completed' && (
+                        <>
+                            <button 
+                                class="button download"
+                                data-backup-id={backup.id}
+                            >
+                                Download
+                            </button>
+                            <button 
+                                class="button restore"
+                                data-backup-id={backup.id}
+                            >
+                                Restore
+                            </button>
+                        </>
+                    )}
+                    <button 
+                        class="button delete"
+                        data-backup-id={backup.id}
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ))}
+
+        {backups.length === 0 && (
+            <div class="empty-state">
+                <p>No backups available. Create your first backup!</p>
+                <button id="createFirstBackup" class="button primary">Create Backup</button>
+            </div>
+        )}
+    </div>
+</AdminLayout>
+
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <h2>Confirm Action</h2>
+        <p id="confirmMessage"></p>
+        <div class="button-group">
+            <button id="confirmYes" class="button primary">Yes</button>
+            <button id="confirmNo" class="button">No</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .backup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .backup-options {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .backup-form {
+        max-width: 400px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .backup-item {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .backup-info {
+        flex: 1;
+    }
+
+    .backup-meta {
+        color: #666;
+        font-size: 0.9rem;
+        margin: 0.5rem 0;
+    }
+
+    .backup-size {
+        color: #666;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .backup-status {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        text-transform: capitalize;
+    }
+
+    .backup-status[data-status="completed"] {
+        background: #e6f4ea;
+        color: #1e7e34;
+    }
+
+    .backup-status[data-status="pending"] {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .backup-status[data-status="failed"] {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .backup-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .button {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        border: none;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .button.primary {
+        background: #0066cc;
+        color: white;
+    }
+
+    .button.download {
+        background: #f4f4f4;
+        color: #333;
+    }
+
+    .button.restore {
+        background: #e6f4ea;
+        color: #1e7e34;
+    }
+
+    .button.delete {
+        background: #fee;
+        color: #c00;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: white;
+        margin: 15% auto;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 400px;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+
+<script>
+    function formatSize(bytes) {
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let size = bytes;
+        let unitIndex = 0;
+        
+        while (size >= 1024 && unitIndex < units.length - 1) {
+            size /= 1024;
+            unitIndex++;
+        }
+        
+        return `${size.toFixed(2)} ${units[unitIndex]}`;
+    }
+
+    function showModal(message, onConfirm) {
+        const modal = document.getElementById('confirmModal');
+        const messageEl = document.getElementById('confirmMessage');
+        messageEl.textContent = message;
+        modal.style.display = 'block';
+
+        document.getElementById('confirmYes').onclick = () => {
+            modal.style.display = 'none';
+            onConfirm();
+        };
+
+        document.getElementById('confirmNo').onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
+
+    // Show/hide backup options
+    document.getElementById('createBackup').addEventListener('click', () => {
+        document.getElementById('backupOptions').style.display = 'block';
+    });
+
+    document.getElementById('cancelBackup').addEventListener('click', () => {
+        document.getElementById('backupOptions').style.display = 'none';
+    });
+
+    // Handle backup creation
+    document.getElementById('backupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const type = document.getElementById('backupType').value;
+        
+        try {
+            const response = await fetch('/api/backups', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type })
+            });
+            
+            if (!response.ok) throw new Error('Failed to create backup');
+            
+            window.location.reload();
+        } catch (error) {
+            console.error('Backup creation failed:', error);
+            alert('Failed to create backup. Please try again.');
+        }
+    });
+
+    // Handle backup actions
+    document.querySelectorAll('.backup-actions button').forEach(button => {
+        button.addEventListener('click', async () => {
+            const backupId = button.dataset.backupId;
+            const action = button.classList.contains('restore') ? 'restore' : 
+                          button.classList.contains('delete') ? 'delete' : 'download';
+
+            if (action === 'download') {
+                window.location.href = `/api/backups/${backupId}/download`;
+                return;
+            }
+
+            const message = action === 'restore' 
+                ? 'Are you sure you want to restore this backup? This will overwrite current data.'
+                : 'Are you sure you want to delete this backup? This cannot be undone.';
+
+            showModal(message, async () => {
+                try {
+                    const response = await fetch(`/api/backups/${backupId}`, {
+                        method: action === 'restore' ? 'POST' : 'DELETE'
+                    });
+
+                    if (!response.ok) throw new Error(`Failed to ${action} backup`);
+
+                    window.location.reload();
+                } catch (error) {
+                    console.error(`Backup ${action} failed:`, error);
+                    alert(`Failed to ${action} backup. Please try again.`);
+                }
+            });
+        });
+    });
+</script>

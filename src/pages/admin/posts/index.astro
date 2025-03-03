@@ -1,0 +1,100 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// This would come from your content collections
+const posts = [];
+---
+
+<AdminLayout title="Posts">
+	<div class="posts-header">
+		<h1>Posts</h1>
+		<a href="/admin/posts/new" class="button">New Post</a>
+	</div>
+
+	<div class="posts-list">
+		{posts.length > 0 ? (
+			<table>
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th>Status</th>
+						<th>Date</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{posts.map((post) => (
+						<tr>
+							<td>{post.title}</td>
+							<td>{post.status}</td>
+							<td>{post.date}</td>
+							<td>
+								<a href={`/admin/posts/${post.id}`}>Edit</a>
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		) : (
+			<div class="empty-state">
+				<p>No posts yet. Create your first post!</p>
+				<a href="/admin/posts/new" class="button">Create Post</a>
+			</div>
+		)}
+	</div>
+</AdminLayout>
+
+<style>
+	.posts-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 2rem;
+	}
+
+	.button {
+		background: #0066cc;
+		color: white;
+		padding: 0.5rem 1rem;
+		border-radius: 4px;
+		text-decoration: none;
+	}
+
+	.button:hover {
+		background: #0052a3;
+		text-decoration: none;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		background: white;
+		border-radius: 8px;
+		overflow: hidden;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+
+	th, td {
+		padding: 1rem;
+		text-align: left;
+		border-bottom: 1px solid #eee;
+	}
+
+	th {
+		background: #f8f9fa;
+		font-weight: 600;
+	}
+
+	.empty-state {
+		text-align: center;
+		padding: 3rem;
+		background: white;
+		border-radius: 8px;
+		box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+	}
+
+	.empty-state p {
+		margin-bottom: 1rem;
+		color: #666;
+	}
+</style>
