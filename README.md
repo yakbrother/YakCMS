@@ -1,14 +1,49 @@
 # YakCMS
 
-A modern, lightweight CMS built with Astro that provides post editing capabilities with image upload support.
+A modern, secure, and feature-rich content management system built with Astro, focusing on flexibility, security, and modern web development practices.
 
-## Features
+## Core Features
 
-- Rich text post editor
-- Image upload with optimization
-- Automatic image resizing and compression
-- Modern, responsive UI
-- TypeScript support
+### Content Management
+- Rich text post editor with Markdown support
+- Post versioning and revision history
+- Post scheduling and publishing workflow
+- Multi-language content support
+- SEO metadata management
+- Content templates and snippets
+
+### Media Management
+- Advanced media library with bulk operations
+- Image optimization and automatic resizing
+- File type and size validation
+- Metadata management (alt text, captions)
+- Media categorization and tagging
+- Bulk operations (delete, tag, move)
+
+### Authentication & Security
+- Multiple authentication methods:
+  - Email/Password
+  - GitHub OAuth
+  - Google OAuth
+- Two-factor authentication (2FA)
+  - TOTP-based (authenticator apps)
+  - Email-based verification
+- Role-based access control
+- Session management with JWT
+- Password reset and email verification
+
+### Audit & Backup
+- Comprehensive audit logging
+  - User actions tracking
+  - Content changes history
+  - Security events monitoring
+- Advanced audit log filtering and search
+- Audit log export (CSV, JSON, PDF)
+- Automated backup system
+  - Full, incremental, and differential backups
+  - Encrypted backups
+  - Configurable retention policies
+  - One-click restore
 
 ## Installation
 
@@ -16,54 +51,168 @@ A modern, lightweight CMS built with Astro that provides post editing capabiliti
 npm install yak-cms
 ```
 
-## Usage
+## Environment Setup
 
-1. Add the plugin to your Astro config:
+Create a `.env` file with the following configuration:
+
+```env
+# Authentication
+AUTH_SECRET=your-secure-random-string
+GITHUB_ID=your-github-oauth-app-id
+GITHUB_SECRET=your-github-oauth-app-secret
+GOOGLE_ID=your-google-oauth-app-id
+GOOGLE_SECRET=your-google-oauth-app-secret
+
+# Email (SMTP)
+SMTP_HOST=your-smtp-server
+SMTP_PORT=587
+SMTP_SECURE=true
+SMTP_USER=your-smtp-username
+SMTP_PASS=your-smtp-password
+SMTP_FROM=noreply@yourdomain.com
+
+# Database
+DATABASE_URL=your-database-connection-string
+```
+
+## Configuration
 
 ```typescript
 // astro.config.mjs
-import postEditor from 'yak-cms';
+import { defineConfig } from 'astro/config';
+import yakCMS from 'yak-cms';
 
 export default defineConfig({
   integrations: [
-    postEditor({
-      uploadDir: 'public/uploads', // optional, defaults to 'public/uploads'
-      maxFileSize: 5 * 1024 * 1024 // optional, defaults to 5MB
+    yakCMS({
+      // Content Management
+      content: {
+        defaultLocale: 'en',
+        supportedLocales: ['en', 'fr', 'es'],
+        versioning: true,
+        scheduling: true
+      },
+      
+      // Media
+      media: {
+        uploadDir: 'public/uploads',
+        maxFileSize: 5 * 1024 * 1024,
+        allowedTypes: ['image/jpeg', 'image/png', 'image/gif'],
+        optimization: {
+          enabled: true,
+          quality: 85
+        }
+      },
+      
+      // Authentication
+      auth: {
+        providers: ['email', 'github', 'google'],
+        twoFactor: {
+          enabled: true,
+          methods: ['totp', 'email']
+        },
+        session: {
+          duration: '7d'
+        }
+      },
+      
+      // Audit & Backup
+      audit: {
+        enabled: true,
+        retention: '90d',
+        export: {
+          formats: ['csv', 'json', 'pdf']
+        }
+      },
+      backup: {
+        schedule: '0 0 * * *', // Daily at midnight
+        type: 'incremental',
+        retention: 30,
+        encryption: {
+          enabled: true,
+          algorithm: 'AES-256-GCM'
+        }
+      }
     })
   ]
 });
 ```
 
-2. Use the editor component in your Astro pages:
-
-```astro
----
-import { PostEditor } from 'yak-cms';
----
-
-<PostEditor postId="optional-post-id" />
-```
-
-## Configuration Options
-
-- `uploadDir`: Directory where uploaded images will be stored (relative to project root)
-- `maxFileSize`: Maximum allowed file size for image uploads in bytes
-
 ## API Endpoints
 
-The plugin adds the following API endpoints:
+### Content Management
+- `GET /api/posts`: List posts with filtering and pagination
+- `POST /api/posts`: Create a new post
+- `PUT /api/posts/:id`: Update an existing post
+- `GET /api/posts/:id/versions`: Get post version history
+- `POST /api/posts/:id/versions`: Create a new version
+- `POST /api/posts/:id/translations`: Create post translation
 
-- `POST /api/upload`: Handle image uploads
-- `GET /api/posts`: Get all posts
-- `POST /api/posts`: Create or update a post
+### Media Management
+- `GET /api/media`: List media files with filtering
+- `POST /api/media`: Upload new media
+- `PUT /api/media/:id`: Update media metadata
+- `POST /api/media/bulk/delete`: Bulk delete media files
+- `POST /api/media/bulk/tag`: Bulk tag media files
+
+### Authentication
+- `POST /api/auth/login`: Email/password login
+- `GET /api/auth/github`: GitHub OAuth login
+- `GET /api/auth/google`: Google OAuth login
+- `POST /api/auth/2fa/setup`: Set up 2FA
+- `POST /api/auth/2fa/verify`: Verify 2FA token
+- `POST /api/auth/reset-password`: Request password reset
+- `PUT /api/auth/reset-password`: Complete password reset
+- `POST /api/auth/verify-email`: Request email verification
+- `PUT /api/auth/verify-email`: Complete email verification
+
+### Audit & Backup
+- `GET /api/audit/logs`: Query audit logs with filtering
+- `GET /api/audit/logs/:id`: Get detailed audit log entry
+- `POST /api/audit/logs/export`: Export audit logs
+- `GET /api/backups`: List available backups
+- `POST /api/backups`: Create new backup
+- `POST /api/backups/:id/restore`: Restore from backup
 
 ## Development
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Build the plugin: `npm run build`
-4. For development: `npm run dev`
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yakbrother/YakCMS.git
+   cd YakCMS
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Run tests:
+   ```bash
+   npm run test        # Run all tests
+   npm run test:watch  # Run tests in watch mode
+   npm run test:ui     # Run tests with UI
+   ```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
 ## License
 
-MIT
+MIT © [YakBrother](https://github.com/yakbrother)
