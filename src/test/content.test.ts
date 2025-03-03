@@ -383,6 +383,50 @@ describe('Content Management System', () => {
       server.use(
         rest.put('/api/media/1', async (req, res, ctx) => {
           const body = await req.json();
+          
+          // Validate required metadata fields
+          if (!body.metadata || !body.metadata.alt) {
+            return new HttpResponse(
+              JSON.stringify({ error: 'Alt text is required' }),
+              { status: 400 }
+            );
+          }
+
+          return res(ctx.json({ ...mockMedia, ...body }));
+        })
+      );
+
+      // Test invalid update (missing alt text)
+      const response1 = await fetch('/api/media/1', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          metadata: {
+            caption: 'Test caption'
+          }
+        })
+      });
+
+      expect(response1.ok).toBe(false);
+      const data1 = await response1.json();
+      expect(data1.error).toBe('Alt text is required');
+
+      // Test valid update
+      const response2 = await fetch('/api/media/1', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          metadata: {
+            alt: 'Updated alt text',
+            caption: 'Test caption'
+          }
+        })
+      });
+
+      expect(response2.ok).toBe(true);
+      const data2 = await response2.json();
+      expect(data2.metadata.alt).toBe('Updated alt text');
+      expect(data2.metadata.caption).toBe('Test caption');
           return res(ctx.json({ ...mockMedia, metadata: body.metadata }));
         })
       );

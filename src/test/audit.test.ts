@@ -392,23 +392,60 @@ describe('Audit System', () => {
     it('should restore from backup with validation', async () => {
       server.use(
         rest.post('/api/backups/1/restore', async (req, res, ctx) => {
+          const body = await req.json();
+          
+          // Validate restore options
+          if (body.options) {
+            if (body.options.encrypted && !body.options.encryptionKey) {
+              return new HttpResponse(
+                JSON.stringify({ error: 'Encryption key required for encrypted backup' }),
+                { status: 400 }
+              );
+            }
+          }
+
           return res(ctx.json({
             jobId: 'restore-1',
             status: 'in_progress',
-            startedAt: '2025-03-03T08:20:08.000Z'
+            startedAt: '2025-03-03T08:20:08.000Z',
+            options: body.options
           }));
         })
       );
 
-      const response = await fetch('/api/backups/1/restore', {
+      // Test restore without encryption key
+      const response1 = await fetch('/api/backups/1/restore', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          options: {
+            encrypted: true
+          }
+        })
       });
 
-      expect(response.ok).toBe(true);
-      const data = await response.json();
-      expect(data.jobId).toBe('restore-1');
-      expect(data.status).toBe('in_progress');
+      expect(response1.ok).toBe(false);
+      const data1 = await response1.json();
+      expect(data1.error).toBe('Encryption key required for encrypted backup');
+
+      // Test valid restore
+      const response2 = await fetch('/api/backups/1/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          options: {
+            encrypted: true,
+            encryptionKey: 'secure-key-123',
+            validateIntegrity: true
+          }
+        })
+      });
+
+      expect(response2.ok).toBe(true);
+      const data2 = await response2.json();
+      expect(data2.jobId).toBe('restore-1');
+      expect(data2.status).toBe('in_progress');
+      expect(data2.options.validateIntegrity).toBe(true);
     });
   });
 });
