@@ -1,59 +1,9 @@
 import '@testing-library/jest-dom';
 import { beforeAll, afterAll, afterEach } from 'vitest';
-import { setupServer } from 'msw/node';
-import { HttpResponse, http } from 'msw';
+import { server } from '../src/test/mocks/server';
 
-// Mock handlers for API endpoints
-const handlers = [
-  http.get('/api/posts', () => {
-    return HttpResponse.json({
-      posts: [
-        {
-          id: '1',
-          title: 'Test Post',
-          content: 'Test content',
-          publishDate: '2025-03-01T12:00:00Z'
-        }
-      ]
-    });
-  }),
-  
-  http.post('/api/posts', async ({ request }) => {
-    const data = await request.json();
-    return HttpResponse.json({
-      success: true,
-      post: {
-        id: '2',
-        ...data
-      }
-    });
-  }),
-
-  http.get('/api/media', () => {
-    return HttpResponse.json({
-      media: [
-        {
-          id: '1',
-          url: '/assets/posts/test-image.webp',
-          alt: 'Test image'
-        }
-      ]
-    });
-  }),
-
-  http.post('/api/media/upload', async ({ request }) => {
-    const formData = await request.formData();
-    return HttpResponse.json({
-      success: true,
-      file: {
-        id: '2',
-        url: '/assets/posts/uploaded-image.webp'
-      }
-    });
-  })
-];
-
-const server = setupServer(...handlers);
+// Enable request debugging
+process.env.DEBUG = 'msw:*';
 
 // Start server before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

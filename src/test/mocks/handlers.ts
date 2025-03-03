@@ -62,6 +62,36 @@ const mockBackup = {
 };
 
 export const handlers = [
+  // Backup Management
+  http.post('/api/backups', async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({
+      id: '1',
+      type: body.type || 'full',
+      status: 'in_progress',
+      createdAt: '2025-03-03T08:20:08.000Z',
+      completedAt: null
+    });
+  }),
+
+  http.get('/api/backups', () => {
+    return HttpResponse.json({
+      backups: [mockBackup],
+      total: 1
+    });
+  }),
+
+  http.get('/api/backups/:id', () => {
+    return HttpResponse.json(mockBackup);
+  }),
+
+  http.post('/api/backups/:id/restore', () => {
+    return HttpResponse.json({
+      jobId: 'restore-1',
+      status: 'in_progress',
+      startedAt: '2025-03-03T08:20:08.000Z'
+    });
+  }),
   // Posts
   http.get('/api/posts', () => {
     return HttpResponse.json({
@@ -172,60 +202,5 @@ export const handlers = [
       );
     }
     return HttpResponse.json({ success: true });
-  }),
-
-  // Audit Logs
-  http.get('/api/audit/logs', () => {
-    return HttpResponse.json({
-      logs: [mockAuditEntry],
-      total: 1,
-      page: 1,
-      pageSize: 10
-    });
-  }),
-
-  http.post('/api/audit/logs', async ({ request }) => {
-    const body = await request.json();
-    return HttpResponse.json({ ...mockAuditEntry, ...body });
-  }),
-
-  http.get('/api/audit/logs/:id', () => {
-    return HttpResponse.json({
-      ...mockAuditEntry,
-      details: {
-        before: { status: 'draft' },
-        after: { status: 'published' }
-      }
-    });
-  }),
-
-  // Backup Management
-  http.post('/api/backups/:id/restore', () => {
-    return HttpResponse.json({
-      jobId: 'restore-1',
-      status: 'in_progress',
-      startedAt: '2025-03-03T08:20:08.000Z'
-    });
-  }),
-
-  // Backups
-  http.get('/api/backups', () => {
-    return HttpResponse.json({
-      backups: [mockBackup],
-      total: 1
-    });
-  }),
-
-  http.post('/api/backups', async ({ request }) => {
-    const body = await request.json();
-    return HttpResponse.json({ ...mockBackup, ...body });
-  }),
-
-  http.post('/api/backups/:id/restore', () => {
-    return HttpResponse.json({
-      jobId: 'restore-1',
-      status: 'in_progress',
-      startedAt: '2025-03-03T08:20:08.000Z'
-    });
   })
 ];

@@ -32,13 +32,7 @@ A modern, secure, and feature-rich content management system built with Astro, f
 - Session management with JWT
 - Password reset and email verification
 
-### Audit & Backup
-- Comprehensive audit logging
-  - User actions tracking
-  - Content changes history
-  - Security events monitoring
-- Advanced audit log filtering and search
-- Audit log export (CSV, JSON, PDF)
+### Backup System
 - Automated backup system
   - Full, incremental, and differential backups
   - Encrypted backups
@@ -116,14 +110,7 @@ export default defineConfig({
         }
       },
       
-      // Audit & Backup
-      audit: {
-        enabled: true,
-        retention: '90d',
-        export: {
-          formats: ['csv', 'json', 'pdf']
-        }
-      },
+      // Backup System
       backup: {
         schedule: '0 0 * * *', // Daily at midnight
         type: 'incremental',
@@ -166,12 +153,10 @@ export default defineConfig({
 - `POST /api/auth/verify-email`: Request email verification
 - `PUT /api/auth/verify-email`: Complete email verification
 
-### Audit & Backup
-- `GET /api/audit/logs`: Query audit logs with filtering
-- `GET /api/audit/logs/:id`: Get detailed audit log entry
-- `POST /api/audit/logs/export`: Export audit logs
+### Backup System
 - `GET /api/backups`: List available backups
 - `POST /api/backups`: Create new backup
+- `GET /api/backups/:id`: Get backup status
 - `POST /api/backups/:id/restore`: Restore from backup
 
 ## Development

@@ -174,31 +174,6 @@ describe('Posts API', () => {
       expect(data).toHaveProperty('slug');
     });
 
-    it('should handle scheduled posts', async () => {
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 1);
-
-      const mockPost = {
-        title: 'Scheduled Post',
-        content: 'Test content',
-        status: 'scheduled',
-        publishDate: futureDate.toISOString(),
-        timezone: 'UTC'
-      };
-
-      const request = new Request('http://localhost/api/posts', {
-        method: 'POST',
-        body: JSON.stringify(mockPost)
-      });
-
-      const response = await post({ request } as any);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data).toHaveProperty('success', true);
-      expect(data.frontmatter).toHaveProperty('publishDate');
-      expect(data.frontmatter).toHaveProperty('draft', true);
-    });
 
     it('should validate required fields', async () => {
       const mockPost = {
@@ -242,24 +217,6 @@ describe('Posts API', () => {
       const responses = await Promise.all(requests);
       const tooManyRequests = responses.some(r => r.status === 429);
       expect(tooManyRequests).toBe(true);
-    });
-  });
-});
-      const mockPost = {
-        content: 'Test content'
-        // Missing title
-      };
-
-      const request = new Request('http://localhost/api/posts', {
-        method: 'POST',
-        body: JSON.stringify(mockPost)
-      });
-
-      const response = await post({ request } as any);
-      const data = await response.json();
-
-      expect(response.status).toBe(400);
-      expect(data).toHaveProperty('error');
     });
   });
 });

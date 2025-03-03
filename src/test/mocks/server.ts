@@ -4,10 +4,7 @@ import { handlers } from './handlers';
 // Configure MSW with performance optimizations
 export const server = setupServer(...handlers);
 
-// Reduce network delay simulation
-server.listen({ onUnhandledRequest: 'bypass' });
-
-// Disable response transforms
+// Disable response transforms for better performance
 server.events.on('request:start', () => {
   return {
     shouldContinue: true,
