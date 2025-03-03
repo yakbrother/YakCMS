@@ -199,6 +199,15 @@ export const handlers = [
     });
   }),
 
+  // Backup Management
+  http.post('/api/backups/:id/restore', () => {
+    return HttpResponse.json({
+      jobId: 'restore-1',
+      status: 'in_progress',
+      startedAt: '2025-03-03T08:20:08.000Z'
+    });
+  }),
+
   // Backups
   http.get('/api/backups', () => {
     return HttpResponse.json({
