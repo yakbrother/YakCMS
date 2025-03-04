@@ -245,26 +245,4 @@ test.describe('Post Management', () => {
     await previewPage.reload();
     await expect(previewPage.locator('h1')).toHaveText('Updated Preview Title');
   });
-    await page.click('text=New Post');
-    await page.fill('input[name="title"]', 'Invalid Schedule Test');
-    
-    // Set to scheduled
-    await page.check('input[value="scheduled"]');
-    
-    // Set past date
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    await page.fill('input[type="date"]', format(yesterday, 'yyyy-MM-dd'));
-    await page.fill('input[type="time"]', '12:00');
-    
-    // Try to save
-    await page.click('text=Save Post');
-    
-    // Verify error message
-    await expect(page.locator('text=Please select a future date and time')).toBeVisible();
-    
-    // Verify we're still on the editor page
-    await expect(page).toHaveURL('/admin/editor');
-  });
 });
