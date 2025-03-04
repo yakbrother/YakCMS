@@ -22,7 +22,6 @@
     "moduleResolution": "bundler",
     "allowJs": true,
     "esModuleInterop": true,
-    "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
