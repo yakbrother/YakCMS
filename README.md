@@ -1,3 +1,5 @@
+![YakCMS](yak-cms.jpg)
+
 # 👋 Welcome to YakCMS!
 
 Hey there! Looking for a modern CMS that's actually fun to work with? You've found it! YakCMS is built with Astro and designed to make content management a breeze while keeping your data secure and your workflow smooth.
@@ -5,6 +7,7 @@ Hey there! Looking for a modern CMS that's actually fun to work with? You've fou
 ## ✨ What Makes YakCMS Special?
 
 ### 📝 Content That Works for You
+
 - Write in style with our Markdown-powered editor
 - Never lose work with automatic version history
 - Schedule posts for the perfect timing
@@ -13,6 +16,7 @@ Hey there! Looking for a modern CMS that's actually fun to work with? You've fou
 - Save time with reusable templates
 
 ### 🖼️ Media Made Simple
+
 - Drag-and-drop file uploads
 - Auto-optimization for lightning-fast loading
 - Smart file validation to keep things safe
@@ -20,6 +24,7 @@ Hey there! Looking for a modern CMS that's actually fun to work with? You've fou
 - Quick bulk actions when you need them
 
 ### 🔐 Rock-Solid Security
+
 - Login your way:
   - Classic email/password
   - Quick GitHub login
@@ -32,6 +37,7 @@ Hey there! Looking for a modern CMS that's actually fun to work with? You've fou
 - Hassle-free password recovery
 
 ### 💾 Peace of Mind
+
 - Automatic backups that just work
   - Choose your backup style
   - Bank-grade encryption
@@ -41,11 +47,13 @@ Hey there! Looking for a modern CMS that's actually fun to work with? You've fou
 ## 🚀 Get Started in 5 Minutes
 
 1. Install YakCMS:
+
 ```bash
 npm install yak-cms
 ```
 
 2. Create your `.env` file:
+
 ```env
 # The essentials
 AUTH_SECRET=pick-something-super-secret
@@ -57,7 +65,7 @@ GITHUB_SECRET=your-github-secret
 GOOGLE_ID=your-google-app-id
 GOOGLE_SECRET=your-google-secret
 
-# Optional: Email notifications
+# Optional: Email notifications (for password reset, 2FA, and system notifications)
 SMTP_HOST=your-smtp-server
 SMTP_PORT=587
 SMTP_USER=your-email
@@ -66,56 +74,58 @@ SMTP_FROM=noreply@yourdomain.com
 ```
 
 3. Set up your `astro.config.mjs`:
+
 ```typescript
-import { defineConfig } from 'astro/config';
-import yakCMS from 'yak-cms';
+import { defineConfig } from "astro/config";
+import yakCMS from "yak-cms";
 
 export default defineConfig({
   integrations: [
     yakCMS({
       // Content settings
       content: {
-        defaultLocale: 'en',
-        supportedLocales: ['en', 'fr', 'es'],
+        defaultLocale: "en",
+        supportedLocales: ["en", "fr", "es"],
         versioning: true,
-        scheduling: true
+        scheduling: true,
       },
-      
+
       // Media settings
       media: {
-        uploadDir: 'public/uploads',
+        uploadDir: "public/uploads",
         maxFileSize: 5 * 1024 * 1024, // 5MB
-        allowedTypes: ['image/jpeg', 'image/png', 'image/gif'],
+        allowedTypes: ["image/jpeg", "image/png", "image/gif"],
         optimization: {
           enabled: true,
-          quality: 85
-        }
+          quality: 85,
+        },
       },
-      
+
       // Auth settings
       auth: {
-        providers: ['email', 'github', 'google'],
+        providers: ["email", "github", "google"],
         twoFactor: {
           enabled: true,
-          methods: ['totp', 'email']
-        }
+          methods: ["totp", "email"],
+        },
       },
-      
+
       // Backup settings
       backup: {
-        schedule: '0 0 * * *', // Every night at midnight
-        type: 'incremental',
+        schedule: "0 0 * * *", // Every night at midnight
+        type: "incremental",
         retention: 30,
-        encryption: { enabled: true }
-      }
-    })
-  ]
+        encryption: { enabled: true },
+      },
+    }),
+  ],
 });
 ```
 
 ## 🛠️ API Quick Reference
 
 ### Content
+
 - `GET /api/posts` - Browse your posts
 - `POST /api/posts` - Create something new
 - `PUT /api/posts/:id` - Update your content
@@ -124,12 +134,14 @@ export default defineConfig({
 - `POST /api/posts/:id/translations` - Add translations
 
 ### Media
+
 - `GET /api/media` - Browse your files
 - `POST /api/media` - Upload new stuff
 - `PUT /api/media/:id` - Update file details
 - `POST /api/media/bulk/*` - Bulk actions
 
 ### Auth
+
 - `POST /api/auth/login` - Sign in
 - `GET /api/auth/{github|google}` - Social login
 - `POST /api/auth/2fa/*` - 2FA management
@@ -137,6 +149,7 @@ export default defineConfig({
 - `POST /api/auth/verify-email` - Email verification
 
 ### Backups
+
 - `GET /api/backups` - View your backups
 - `POST /api/backups` - Create a backup
 - `POST /api/backups/:id/restore` - Restore when needed
@@ -144,23 +157,27 @@ export default defineConfig({
 ## 🌱 Want to Run it Locally?
 
 1. Clone it:
+
 ```bash
 git clone https://github.com/yakbrother/YakCMS.git
 cd YakCMS
 ```
 
 2. Install everything:
+
 ```bash
 npm install
 ```
 
 3. Set up your environment:
+
 ```bash
 cp .env.example .env
 # Fill in your details
 ```
 
 4. Start coding:
+
 ```bash
 npm run dev
 ```
